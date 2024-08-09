@@ -27,7 +27,7 @@ public class BookService : IBookService
         _books.Add(book);
     }
 
-    public void Delete(Guid id)
+    public void Delete(int id)
     {
         var book = _books.Find(b => b.Id == id);
         if (book is null)
@@ -54,7 +54,7 @@ public class BookService : IBookService
         return _books.FindAll(b => b.GenreId == genreId);
     }
 
-    public Book GetById(Guid id)
+    public Book GetById(int id)
     {
         var book = _books.Find(b =>b.Id == id);
         if (book is null)
@@ -73,7 +73,7 @@ public class BookService : IBookService
         return _books.FindAll(b =>b.Name == name);
     }
 
-    public void Update(Guid id, Book updatingBook)
+    public void Update(int id, Book updatingBook)
     {
         Book book = _books.Find(b => b.Id == id);
         if(book is null)

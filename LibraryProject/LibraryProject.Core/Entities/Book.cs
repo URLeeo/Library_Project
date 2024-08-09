@@ -2,9 +2,10 @@
 
 namespace LibraryProject.Core.Entities;
 
-public class Book : IEntity<Guid>
+public class Book : IEntity<int>
 {
-    public Guid Id { get; }
+    public int Id { get; set; }
+    private static int _id;
     public string Name { get; set; } = null!;
     public int? PublicationDate { get; set; }
     public int Count { get; set; }
@@ -18,7 +19,7 @@ public class Book : IEntity<Guid>
         Count = count;
         AuthorId = authorId;
         GenreId = genreId;
-        Id = new Guid();
+        Id = _id++;
     }
     public override string ToString()
     {

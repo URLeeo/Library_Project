@@ -1,13 +1,15 @@
 ﻿// See https://aka.ms/new-console-template for more information
+using LibraryProject.Business.Abstracts;
 using LibraryProject.Business.Exceptions;
 using LibraryProject.Business.Implementations;
 using LibraryProject.Core.Entities;
-
+using System.Linq;
 Console.WriteLine("Library Project Is Started : ");
 GenreService genreService = new();
 AuthorService authorService = new();
-BookService bookService = new(authorService,genreService);
-
+LoanedBooksService loanedBooksService = new();
+BookService bookService = new(authorService, genreService);
+LibraryService library = new();
 bool continueProgram = true;
 while (continueProgram)
 {
@@ -28,7 +30,11 @@ while (continueProgram)
     Console.WriteLine("11. Delete Book");
     Console.WriteLine("12. Show All Books");
     Console.WriteLine("13. Show Books by Author");
-    Console.WriteLine("14. Show Books by Genre");
+    Console.WriteLine("14. Loan Book");
+    Console.WriteLine("15. Return Book");
+    Console.WriteLine("16. Show Loaned Books");
+    Console.WriteLine("17. Show Overdue Loans");
+    Console.WriteLine("18. Show Books by Genre");
     Console.WriteLine("0. Exit");
     Console.ResetColor();
 
@@ -36,7 +42,7 @@ while (continueProgram)
     int choice;
     if (!int.TryParse(Console.ReadLine(), out choice))
     {
-        Console.ForegroundColor= ConsoleColor.Red;
+        Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine("Invalid Input... Please Try To Use a Valid Number");
         Console.ResetColor();
         continue;
@@ -113,7 +119,7 @@ while (continueProgram)
                 var genres = genreService.GetAll();
                 foreach (var genre in genres)
                 {
-                    Console.WriteLine($"ID: {genre.Id}, Name: { genre.Name}");
+                    Console.WriteLine($"ID: {genre.Id}, Name: {genre.Name}");
                 }
                 break;
 
@@ -136,7 +142,7 @@ while (continueProgram)
                 }
                 Console.Write("Enter Book name: ");
                 string bookName = Console.ReadLine();
-                Console.Write("Enter Book Publicatio nDate: ");
+                Console.Write("Enter Book Publication Date: ");
                 int publicationDate = int.Parse(Console.ReadLine());
                 Console.Write("Enter Book Count: ");
                 int bookCount = int.Parse(Console.ReadLine());
@@ -151,7 +157,7 @@ while (continueProgram)
 
             case 10:
                 Console.Write("Enter Book ID: ");
-                Guid bookId = Guid.Parse(Console.ReadLine());
+                int bookId = int.Parse(Console.ReadLine());
                 Console.Write("Enter new Book name: ");
                 bookName = Console.ReadLine();
                 Console.Write("Enter new Book Publication Date: ");
@@ -170,7 +176,7 @@ while (continueProgram)
 
             case 11:
                 Console.Write("Enter Book ID: ");
-                bookId = Guid.Parse(Console.ReadLine());
+                bookId = int.Parse(Console.ReadLine());
                 bookService.Delete(bookId);
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("Book deleted successfully.");
@@ -207,6 +213,22 @@ while (continueProgram)
                 }
                 break;
 
+            case 15:
+                LoanBook();
+                break;
+
+            case 16:
+                ReturnBook();
+                break;
+
+
+            case 17:
+                ViewLoanedBooks();
+                break;
+
+            case 18:
+                ViewOverdueLoans();
+                break;
             case 0:
                 continueProgram = false;
                 Console.ForegroundColor = ConsoleColor.Cyan;
@@ -235,4 +257,106 @@ while (continueProgram)
     }
     Console.WriteLine("\nPress any key to continue...");
     Console.ReadKey();
+}
+
+void ViewOverdueLoans()
+{
+    try
+    {
+        library.ViewOverdueLoans();
+    }
+    catch (Exception ex)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"An error occurred while viewing overdue loans: {ex.Message}");
+        Console.ResetColor();
+    }
+}
+
+void ReturnBook()
+{
+    Console.Write("Enter the ID of the book to return: ");
+    int bookId;
+    while (!int.TryParse(Console.ReadLine(), out bookId))
+    {
+        Console.Write("Invalid ID. Please enter a valid book ID: ");
+    }
+
+    try
+    {
+        library.ReturnBook(bookId);
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("Book returned successfully.");
+        Console.ResetColor();
+    }
+    catch (Exception ex)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"An error occurred while returning the book: {ex.Message}");
+        Console.ResetColor();
+    }
+}
+
+void LoanBook()
+{
+    Console.Write("Enter the ID of the book to loan: ");
+    int bookId;
+    while (!int.TryParse(Console.ReadLine(), out bookId))
+    {
+        Console.Write("Invalid ID. Please enter a valid book ID: ");
+    }
+
+    Console.Write("Enter the loan date (yyyy-MM-dd): ");
+    DateTime loanDate;
+    while (!DateTime.TryParse(Console.ReadLine(), out loanDate))
+    {
+        Console.Write("Invalid date. Please enter a valid date (yyyy-MM-dd): ");
+    }
+
+    try
+    {
+        library.LoanBook(bookId, loanDate);
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("Book loaned successfully.");
+        Console.ResetColor();
+    }
+    catch (Exception ex)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"An error occurred while loaning the book: {ex.Message}");
+        Console.ResetColor();
+    }
+}
+
+void ViewLoanedBooks()
+{
+    try
+    {
+        var loanedBooks = library.GetLoanedBooks();
+        if (loanedBooks.Any())
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Currently loaned books:");
+            foreach (var loan in loanedBooks)
+            {
+                var book = DataAccess.DataContext.Books.FirstOrDefault(b => b.Id == loan.Id);
+                if (book != null)
+                {
+                    Console.WriteLine($"Book ID: {book.Id}, Title: {book.Name}, Loan Date: {loan.LoanDate}, Due Date: {loan.DueDate}");
+                }
+            }
+        }
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("No books are currently loaned.");
+        }
+        Console.ResetColor();
+    }
+    catch (Exception ex)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"An error occurred while viewing loaned books: {ex.Message}");
+        Console.ResetColor();
+    }
 }
