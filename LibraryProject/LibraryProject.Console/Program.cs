@@ -7,7 +7,6 @@ using System.Linq;
 Console.WriteLine("Library Project Is Started : ");
 GenreService genreService = new();
 AuthorService authorService = new();
-LoanedBooksService loanedBooksService = new();
 BookService bookService = new(authorService, genreService);
 LibraryService library = new();
 bool continueProgram = true;
@@ -142,7 +141,7 @@ while (continueProgram)
                 }
                 Console.Write("Enter Book name: ");
                 string bookName = Console.ReadLine();
-                Console.Write("Enter Book Publication Date: ");
+                Console.Write("Enter Book Publication Date(YearMonthDay): ");
                 int publicationDate = int.Parse(Console.ReadLine());
                 Console.Write("Enter Book Count: ");
                 int bookCount = int.Parse(Console.ReadLine());
